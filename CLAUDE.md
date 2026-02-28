@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Purpose
 
-This repo is an **Agent Skills repository** for publishing Gatling performance testing skills to [skills.sh](https://skills.sh) / [agentskills.io](https://agentskills.io). It does not contain runnable Gatling tests — it contains skill definitions that guide AI agents in building them.
+This repo is an **Agent Skills repository** for publishing performance testing skills to [skills.sh](https://skills.sh) / [agentskills.io](https://agentskills.io). It does not contain runnable tests — it contains skill definitions that guide AI agents in building them.
+
+Each skill lives in `skills/<skill-name>/` and is independently installable. The repo is designed to grow: new skills for other tools (k6, JMeter, Locust, etc.) follow the same structure.
 
 ## Repository Structure
 
@@ -58,6 +60,30 @@ metadata:                 # optional
 1. Create `skills/<new-skill-name>/SKILL.md` — the directory name must equal the `name` frontmatter field.
 2. Validate frontmatter against the constraints above before committing.
 3. If the body exceeds ~500 lines, extract reference material into `skills/<new-skill-name>/references/`.
+4. Add the skill to the `Current Skills` table below and to `README.md`.
+
+## Testing a Skill
+
+After any change to a skill, validate it by installing and running prompts in a separate test directory:
+
+```bash
+# 1. Create a clean test directory
+mkdir ~/gatling-test && cd ~/gatling-test
+
+# 2. Install the updated skill
+npx skills add rcampos09/performance-testing-skills --yes
+
+# 3. Open Claude Code and run a test prompt
+# 4. Analyze the log — look for extra iterations, errors, or wrong output
+# 5. Fix issues in the skill files, commit, push
+# 6. Re-install (npx skills add ... --yes) and repeat
+```
+
+**What to look for in logs:**
+- Extra iterations = missing information in SKILL.md (add it)
+- Wrong package names / imports = update code examples in SKILL.md or references/
+- Script errors = fix scripts/ and re-test
+- Validator false positives = fix validate.sh checks
 
 ## Installing Skills
 
