@@ -59,7 +59,42 @@ bash scripts/scaffold.sh
 
 If the user asks you to generate the project directly (without running the
 script), skip to Step 3 and create the files manually following the 5-block
-pattern. For JS/TS projects, the minimum required files are:
+pattern.
+
+**Kotlin + Gradle — minimum required files:**
+
+`build.gradle.kts` — three omissions cause build failures every time:
+
+```kotlin
+plugins {
+    kotlin("jvm") version "2.0.21"              // ① must come BEFORE the Gatling plugin
+    id("io.gatling.gradle") version "3.14.5"
+}
+
+group = "perf"
+version = "1.0.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()                               // ② required — often forgotten
+}
+
+gatling {
+    jvmArgs = listOf(
+        "-Xms512m", "-Xmx2g",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED"  // ③ Java 21+ module restriction
+    )
+}
+
+dependencies {
+    gatling("io.gatling.highcharts:gatling-charts-highcharts:3.14.5")
+}
+```
+
+Source directories (Gatling Gradle plugin — **not** `src/test/`):
+- Kotlin simulations → `src/gatling/kotlin/<package>/`
+- Resources (gatling.conf, feeders) → `src/gatling/resources/`
+
+**For JS/TS projects**, the minimum required files are:
 - `package.json` with `"type": "module"` and deps `@gatling.io/cli`, `@gatling.io/core`, `@gatling.io/http`
 - `src/<SimulationName>.gatling.js` (or `.gatling.ts`) — file must be in `src/`
   directly with the `.gatling.js` / `.gatling.ts` suffix (required by the CLI)
@@ -400,8 +435,7 @@ compile error in Kotlin even though Java accepts it via widening).
 mvn gatling:test -Dgatling.simulationClass=perf.MySimulation \
                  -DbaseUrl=https://staging.example.com -Dusers=50
 
-# Gradle — use ./gradlew (Gatling Gradle plugin requires Gradle ≤ 8.x;
-#           Gradle 9 is NOT supported and will fail with "reportsDir" error)
+# Gradle — plugin 3.14+ supports Gradle 9; use ./gradlew (or gradle) directly
 ./gradlew gatlingRun                              # runs all simulations
 ./gradlew gatlingRun-perf.MySimulation            # specific class (plugin ≥ 3.14 only)
 

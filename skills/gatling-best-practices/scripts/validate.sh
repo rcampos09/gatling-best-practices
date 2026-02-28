@@ -103,14 +103,17 @@ title "Source Structure"
 
 JVM_SRC_FOUND=false
 for lang in java kotlin scala; do
-  DIR="${PROJECT_DIR}/src/test/${lang}"
-  if [[ -d "$DIR" ]]; then
-    COUNT=$(find "$DIR" -name "*.${lang}" -o -name "*.kt" -o -name "*.java" 2>/dev/null | wc -l | tr -d ' ')
-    if [[ "$COUNT" -gt 0 ]]; then
-      pass "Found ${COUNT} source file(s) in src/test/${lang}/"
-      JVM_SRC_FOUND=true
+  # Check both Maven (src/test/) and Gradle Gatling plugin (src/gatling/) conventions
+  for base in "test" "gatling"; do
+    DIR="${PROJECT_DIR}/src/${base}/${lang}"
+    if [[ -d "$DIR" ]]; then
+      COUNT=$(find "$DIR" -name "*.${lang}" -o -name "*.kt" -o -name "*.java" 2>/dev/null | wc -l | tr -d ' ')
+      if [[ "$COUNT" -gt 0 ]]; then
+        pass "Found ${COUNT} source file(s) in src/${base}/${lang}/"
+        JVM_SRC_FOUND=true
+      fi
     fi
-  fi
+  done
 done
 
 JS_SRC_FOUND=false
@@ -123,13 +126,14 @@ if [[ -d "${PROJECT_DIR}/src" ]]; then
 fi
 
 ! $JVM_SRC_FOUND && ! $JS_SRC_FOUND && \
-  warn "No simulation source files found. Create one in src/test/java (or scala/kotlin) or src/*.gatling.js (JS/TS)"
+  warn "No simulation source files found. Create one in src/test/java (Maven), src/gatling/kotlin (Gradle), or src/*.gatling.js (JS/TS)"
 
 # ── Resource checks ───────────────────────────────────────────────────────────
 title "Resources"
 
 RES_DIRS=(
-  "${PROJECT_DIR}/src/test/resources"
+  "${PROJECT_DIR}/src/test/resources"      # Maven
+  "${PROJECT_DIR}/src/gatling/resources"   # Gradle Gatling plugin
   "${PROJECT_DIR}/src/resources"
 )
 RES_FOUND=false
