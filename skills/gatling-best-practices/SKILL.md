@@ -385,6 +385,10 @@ for critical paths.
 Use `percentile(95)` and `percentile(99)`, not `mean()`. Mean hides the tail:
 a p99 of 10 seconds is invisible when mean is 200ms.
 
+**Kotlin note:** `percentile()` requires a `Double` argument — write
+`.percentile(95.0).lt(1000)`, not `.percentile(95).lt(1000)` (Int causes a
+compile error in Kotlin even though Java accepts it via widening).
+
 ---
 
 ## Run Commands
@@ -394,8 +398,9 @@ a p99 of 10 seconds is invisible when mean is 200ms.
 mvn gatling:test -Dgatling.simulationClass=perf.MySimulation \
                  -DbaseUrl=https://staging.example.com -Dusers=50
 
-# Gradle
-gradle gatlingRun-perf.MySimulation -DbaseUrl=https://staging.example.com
+# Gradle — use ./gradlew (Gatling Gradle plugin requires Gradle ≤ 8.x;
+#           Gradle 9 is NOT supported and will fail with "reportsDir" error)
+./gradlew gatlingRun-perf.MySimulation -DbaseUrl=https://staging.example.com
 
 # TypeScript / JavaScript  (use simulation name, not file path)
 BASE_URL=https://staging.example.com USERS=50 \

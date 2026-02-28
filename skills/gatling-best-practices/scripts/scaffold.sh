@@ -183,10 +183,15 @@ EOF
 
   # ── build.gradle (Gradle) ─────────────────────────────────────────────
   else
+    info "Writing settings.gradle..."
+    cat > "${TARGET_DIR}/settings.gradle" <<EOF
+rootProject.name = '${PROJECT_NAME}'
+EOF
+
     info "Writing build.gradle..."
     cat > "${TARGET_DIR}/build.gradle" <<EOF
 plugins {
-  id 'io.gatling.gradle' version '4.14.0'
+  id 'io.gatling.gradle' version '3.14.5'
 }
 
 group = '${BASE_PACKAGE}'
@@ -199,6 +204,16 @@ gatling {
 dependencies {
   gatling 'io.gatling.highcharts:gatling-charts-highcharts:3.14.5'
 }
+EOF
+
+    info "Writing gradle-wrapper.properties (pinned to Gradle 8.7 — Gradle 9 is not supported by the Gatling plugin)..."
+    mkdir -p "${TARGET_DIR}/gradle/wrapper"
+    cat > "${TARGET_DIR}/gradle/wrapper/gradle-wrapper.properties" <<'EOF'
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
 EOF
   fi
 
@@ -539,7 +554,7 @@ Gatling performance tests — language: **${LANG}**, build: **${BUILD_TOOL}**.
 $(if [[ "$BUILD_TOOL" == "maven" ]]; then
   echo "mvn gatling:test -Dgatling.simulationClass=${BASE_PACKAGE}.${SIM_CLASS} -DbaseUrl=${BASE_URL} -Dusers=10"
 elif [[ "$BUILD_TOOL" == "gradle" ]]; then
-  echo "gradle gatlingRun-${BASE_PACKAGE}.${SIM_CLASS} -DbaseUrl=${BASE_URL} -Dusers=10"
+  echo "./gradlew gatlingRun-${BASE_PACKAGE}.${SIM_CLASS} -DbaseUrl=${BASE_URL} -Dusers=10"
 else
   echo "BASE_URL=${BASE_URL} USERS=10 npx gatling run --simulation ${SIM_CLASS}"
 fi)
@@ -559,7 +574,7 @@ echo "  1. cd ${PROJECT_NAME}"
 if [[ "$BUILD_TOOL" == "maven" ]]; then
   echo "  2. mvn gatling:test -Dgatling.simulationClass=${BASE_PACKAGE}.${SIM_CLASS}"
 elif [[ "$BUILD_TOOL" == "gradle" ]]; then
-  echo "  2. gradle gatlingRun-${BASE_PACKAGE}.${SIM_CLASS}"
+  echo "  2. ./gradlew gatlingRun-${BASE_PACKAGE}.${SIM_CLASS}"
 else
   echo "  2. npm install"
   echo "  3. npm test"
