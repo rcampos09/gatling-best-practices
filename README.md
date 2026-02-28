@@ -1,8 +1,8 @@
-# gatling-best-practices
+# performance-testing-skills
 
-A [Claude Code](https://claude.ai/code) skill for writing, fixing, and structuring
-professional Gatling load test simulations across all five officially supported
-languages.
+A collection of [Claude Code](https://claude.ai/code) skills for performance testing.
+Currently includes **gatling-best-practices** — for writing, fixing, and structuring
+professional Gatling load test simulations across all five officially supported languages.
 
 ## Install
 
