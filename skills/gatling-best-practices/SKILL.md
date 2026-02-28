@@ -400,7 +400,8 @@ mvn gatling:test -Dgatling.simulationClass=perf.MySimulation \
 
 # Gradle — use ./gradlew (Gatling Gradle plugin requires Gradle ≤ 8.x;
 #           Gradle 9 is NOT supported and will fail with "reportsDir" error)
-./gradlew gatlingRun-perf.MySimulation -DbaseUrl=https://staging.example.com
+./gradlew gatlingRun                              # runs all simulations
+./gradlew gatlingRun-perf.MySimulation            # specific class (plugin ≥ 3.14 only)
 
 # TypeScript / JavaScript  (use simulation name, not file path)
 BASE_URL=https://staging.example.com USERS=50 \
