@@ -244,13 +244,28 @@ Forgetting `Content-Type` on POST/PUT requests causes the server to reject with
 // Wrong — server returns 415
 .post("/api/users").body(StringBody("""{"name":"#{name}"}"""))
 
-// Correct — use .asJson() shorthand
+// Correct — use .asJson() shorthand (Java / Kotlin only)
 .post("/api/users").body(StringBody("""{"name":"#{name}"}""")).asJson()
 
 // Equivalent explicit form
 .post("/api/users")
     .header("Content-Type", "application/json")
     .body(StringBody("""{"name":"#{name}"}"""))
+```
+
+**Scala note:** `.asJson()` does **not** chain after `.body()` in Scala — it causes a compile error. Set `Content-Type` on the protocol instead:
+
+```scala
+// Scala — set contentTypeHeader on the protocol, not per-request
+val httpProtocol = http
+  .baseUrl(sys.props.getOrElse("baseUrl", "https://api.example.com"))
+  .acceptHeader("application/json")
+  .contentTypeHeader("application/json")  // applies to all requests
+
+// Then just use .body() without .asJson():
+http("POST Login").post("/api/auth/login")
+  .body(StringBody("""{"email":"#{email}","password":"#{password}"}"""))
+  .check(status.is(200))
 ```
 
 ---
@@ -431,6 +446,20 @@ a p99 of 10 seconds is invisible when mean is 200ms.
 **Kotlin note:** `percentile()` requires a `Double` argument — write
 `.percentile(95.0).lt(1000)`, not `.percentile(95).lt(1000)` (Int causes a
 compile error in Kotlin even though Java accepts it via widening).
+
+**Scala note:** assertion methods (`global`, `responseTime`, `successfulRequests`,
+`percent`) are zero-arg methods with an implicit `GatlingConfiguration` parameter.
+Call them **without parentheses** — `global()` is a compile error in Scala:
+
+```scala
+// Wrong — compile error: "not enough arguments for method global"
+global().successfulRequests().percent().gt(99.0)
+
+// Correct — no () on zero-arg methods with implicit params
+global.successfulRequests.percent.gt(99.0)
+global.responseTime.percentile(95).lt(800)
+details("POST Login").responseTime.percentile(99).lt(300)
+```
 
 ---
 
