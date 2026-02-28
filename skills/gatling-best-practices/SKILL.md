@@ -45,9 +45,9 @@ examples in Java, Scala, and TypeScript.
 
 ## Step 2 — New project? Use the scaffold script
 
-Direct the user to run the interactive script rather than writing the project
-structure by hand. The script handles all language/build-tool combinations,
-creates the correct directory layout, and produces a working simulation:
+The scaffold script is **interactive** — it requires keyboard input and cannot
+be run non-interactively. **Tell the user to run it themselves** in their
+terminal; do NOT attempt to execute it with the Bash tool:
 
 ```bash
 # macOS / Linux
@@ -56,6 +56,13 @@ bash scripts/scaffold.sh
 # Windows
 .\scripts\scaffold.ps1
 ```
+
+If the user asks you to generate the project directly (without running the
+script), skip to Step 3 and create the files manually following the 5-block
+pattern. For JS/TS projects, the minimum required files are:
+- `package.json` with `@gatling.io/cli`, `@gatling.io/core`, `@gatling.io/http`
+- `src/<SimulationName>.gatling.js` (or `.gatling.ts`) — file must be in `src/`
+  directly with the `.gatling.js` / `.gatling.ts` suffix (required by the CLI)
 
 After scaffolding — or whenever the user shares an existing Gatling project —
 execute the validator with the Bash tool (do not read it, only the output

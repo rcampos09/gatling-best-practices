@@ -11,9 +11,9 @@ CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
 PASS=0; WARN_COUNT=0; FAIL_COUNT=0
 
-pass()  { echo -e "  ${GREEN}✔${RESET}  $*";                    ((PASS++)); }
-warn()  { echo -e "  ${YELLOW}⚠${RESET}  $*";                   ((WARN_COUNT++)); }
-fail()  { echo -e "  ${RED}✘${RESET}  $*";                      ((FAIL_COUNT++)); }
+pass()  { echo -e "  ${GREEN}✔${RESET}  $*"; PASS=$((PASS + 1)); }
+warn()  { echo -e "  ${YELLOW}⚠${RESET}  $*"; WARN_COUNT=$((WARN_COUNT + 1)); }
+fail()  { echo -e "  ${RED}✘${RESET}  $*"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
 title() { echo -e "\n${BOLD}${CYAN}── $* ${RESET}"; }
 
 PROJECT_DIR="${1:-.}"
