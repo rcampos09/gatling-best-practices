@@ -232,6 +232,9 @@ val httpProtocol = http
 
 ```typescript
 // TypeScript / JavaScript
+import { simulation, scenario, rampUsers, csv, global } from "@gatling.io/core";
+import { http, status, jsonPath } from "@gatling.io/http";
+
 const httpProtocol = http
   .baseUrl(process.env.BASE_URL ?? "https://api.example.com")
   .acceptHeader("application/json");

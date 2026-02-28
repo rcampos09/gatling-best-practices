@@ -388,7 +388,7 @@ EOF
 
 # ── JS / TS ───────────────────────────────────────────────────────────────────
 else
-  SIM_DIR="${TARGET_DIR}/src/simulations"
+  SIM_DIR="${TARGET_DIR}/src"
   RES_DIR="${TARGET_DIR}/src/resources/data"
   mkdir -p "${SIM_DIR}" "${RES_DIR}"
 
@@ -398,13 +398,15 @@ else
   "name": "${PROJECT_NAME}",
   "version": "1.0.0",
   "description": "Gatling performance tests",
+  "type": "module",
   "scripts": {
-    "test": "gatling run --simulation src/simulations/${SIM_CLASS}.gatling.${LANG == 'typescript' && echo 'ts' || echo 'js'}",
+    "test": "gatling run --simulation ${SIM_CLASS}",
     "test:all": "gatling run"
   },
   "devDependencies": {
-    "@gatling.io/cli": "^3.14.5",
-    "@gatling.io/sdk": "^3.14.5"
+    "@gatling.io/cli": "^3.15.0",
+    "@gatling.io/core": "^3.15.0",
+    "@gatling.io/http": "^3.15.0"
   }
 }
 EOF
@@ -420,10 +422,8 @@ EOF
   if [[ "$LANG" == "typescript" ]]; then
     info "Writing ${SIM_CLASS}.gatling.ts..."
     cat > "${SIM_DIR}/${SIM_CLASS}.gatling.ts" <<EOF
-import { simulation, scenario, rampUsers } from "@gatling.io/sdk";
-import { http, status } from "@gatling.io/sdk/http";
-import { csv } from "@gatling.io/sdk/feeders";
-import { global } from "@gatling.io/sdk/assertions";
+import { simulation, scenario, rampUsers, csv, global } from "@gatling.io/core";
+import { http, status } from "@gatling.io/http";
 
 export default simulation((setUp) => {
   // ── 1. Protocol ─────────────────────────────────────────────────────────
@@ -459,10 +459,8 @@ EOF
   else
     info "Writing ${SIM_CLASS}.gatling.js..."
     cat > "${SIM_DIR}/${SIM_CLASS}.gatling.js" <<EOF
-import { simulation, scenario, rampUsers } from "@gatling.io/sdk";
-import { http, status } from "@gatling.io/sdk/http";
-import { csv } from "@gatling.io/sdk/feeders";
-import { global } from "@gatling.io/sdk/assertions";
+import { simulation, scenario, rampUsers, csv, global } from "@gatling.io/core";
+import { http, status } from "@gatling.io/http";
 
 export default simulation((setUp) => {
   const httpProtocol = http
@@ -543,7 +541,7 @@ $(if [[ "$BUILD_TOOL" == "maven" ]]; then
 elif [[ "$BUILD_TOOL" == "gradle" ]]; then
   echo "gradle gatlingRun-${BASE_PACKAGE}.${SIM_CLASS} -DbaseUrl=${BASE_URL} -Dusers=10"
 else
-  echo "BASE_URL=${BASE_URL} USERS=10 npx gatling run --simulation src/simulations/${SIM_CLASS}.gatling.${LANG == 'typescript' && echo 'ts' || echo 'js'}"
+  echo "BASE_URL=${BASE_URL} USERS=10 npx gatling run --simulation ${SIM_CLASS}"
 fi)
 \`\`\`
 

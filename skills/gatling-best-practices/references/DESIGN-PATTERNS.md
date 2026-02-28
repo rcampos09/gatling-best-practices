@@ -68,8 +68,7 @@ src/test/scala/
 
 ```
 src/
-├── simulations/
-│   └── checkoutSimulation.gatling.ts   ← load profile only
+├── checkoutSimulation.gatling.ts       ← simulation file must be in src/ directly
 ├── scenarios/
 │   ├── checkoutScenario.ts
 │   └── browseScenario.ts
@@ -129,7 +128,7 @@ object Protocols {
 export const BASE_URL = process.env.BASE_URL ?? "https://dev.example.com";
 
 // config/protocols.ts
-import { http } from "@gatling.io/sdk/http";
+import { http } from "@gatling.io/http";
 import { BASE_URL } from "./environment";
 export const httpProtocol = http.baseUrl(BASE_URL).acceptHeader("application/json");
 ```
@@ -187,8 +186,8 @@ object LoginRequests {
 **TypeScript:**
 ```typescript
 // requests/loginRequests.ts
-import { exec } from "@gatling.io/sdk";
-import { http, status, jsonPath } from "@gatling.io/sdk/http";
+import { exec } from "@gatling.io/core";
+import { http, status, jsonPath } from "@gatling.io/http";
 
 export const login = exec(
   http("POST Login").post("/auth/login")
