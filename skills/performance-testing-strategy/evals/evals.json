@@ -1,0 +1,169 @@
+{
+  "skill_name": "performance-testing-strategy",
+  "evals": [
+    {
+      "id": 1,
+      "name": "first-time-ecommerce-strategy",
+      "prompt": "We've never done performance testing before. We have an e-commerce site that handles product search, cart, and checkout. Black Friday is in 2 months and we expect 3× our normal traffic. Normal traffic is about 200 concurrent users. Our SLA from the business is that checkout must complete in under 3 seconds. Where do we start?",
+      "expected_output": "A complete strategy covering: Smoke → Load → Spike sequence (with rationale for Black Friday). Load test sized at 200 users baseline and 600 users (3×) for spike. Endurance recommended but optional. Checkout SLA defined as p95 < 3000ms. Prerequisites checklist including test data and environment isolation.",
+      "assertions": [
+        {
+          "name": "recommends_smoke_first",
+          "description": "Strategy starts with Smoke test before any other test type"
+        },
+        {
+          "name": "includes_spike_for_black_friday",
+          "description": "Spike test is recommended because of the 3× traffic burst scenario"
+        },
+        {
+          "name": "sizes_load_at_200_users",
+          "description": "Load test is sized at 200 concurrent users (stated normal traffic)"
+        },
+        {
+          "name": "sizes_spike_at_3x",
+          "description": "Spike test reaches 600 users (3× the 200 user baseline)"
+        },
+        {
+          "name": "defines_checkout_sla",
+          "description": "Checkout endpoint SLA is defined at p95 < 3000ms matching the business requirement"
+        },
+        {
+          "name": "includes_prerequisites",
+          "description": "Response mentions environment isolation, test data, or monitoring as prerequisites"
+        },
+        {
+          "name": "no_tool_specific_syntax",
+          "description": "Strategy uses users/RPS/duration — no tool-specific DSL, class names, or code snippets"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "resource-leak-investigation",
+      "prompt": "Our backend API works fine at launch but after running for a few hours, response times start increasing and we occasionally get out-of-memory crashes. We restart the service and it's fine again. What performance tests should we run to confirm and characterize this problem?",
+      "expected_output": "Strategy focused on Endurance/Soak test (minimum 2 hours) with monitoring instructions for memory and resource metrics over time. Smoke test as first step. Load test to establish baseline before the soak. Guidance on what drift looks like in the results (response time and memory trending upward). Tool-agnostic — no assumption about JVM or specific runtime.",
+      "assertions": [
+        {
+          "name": "recommends_endurance_test",
+          "description": "Endurance/Soak test is the primary recommendation given the memory leak symptoms"
+        },
+        {
+          "name": "mentions_memory_monitoring",
+          "description": "Explicitly mentions monitoring process memory or resource usage over time (not JVM-specific)"
+        },
+        {
+          "name": "recommends_minimum_2_hours",
+          "description": "Soak test duration is at least 2 hours"
+        },
+        {
+          "name": "smoke_before_endurance",
+          "description": "Smoke test is recommended before the endurance test"
+        },
+        {
+          "name": "explains_drift_pattern",
+          "description": "Explains that increasing response times and/or memory over time (drift) is the signal to look for"
+        },
+        {
+          "name": "no_tool_specific_syntax",
+          "description": "No load testing tool DSL, class names, or code snippets in the strategy"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "pre-release-regression-check",
+      "prompt": "We have a REST API that handles 50 RPS at peak. We're releasing a new version tomorrow that rewrites the database query layer. We have 4 hours before the deployment window. What's the minimum performance test we need to run?",
+      "expected_output": "Prioritized, time-boxed strategy: Smoke (5 min) + Load test targeting 50 RPS (30–60 min). Explicit acknowledgement that Stress/Endurance are not feasible in 4 hours but Load test is sufficient for regression check. SLA comparison against current baseline. Clear go/no-go criteria.",
+      "assertions": [
+        {
+          "name": "fits_in_time_constraint",
+          "description": "Recommended tests fit within the 4-hour window stated by the user"
+        },
+        {
+          "name": "smoke_plus_load",
+          "description": "Strategy is Smoke → Load (the minimum viable regression check)"
+        },
+        {
+          "name": "targets_50_rps",
+          "description": "Load test is sized to reach 50 RPS or an equivalent user count that produces that throughput"
+        },
+        {
+          "name": "mentions_baseline_comparison",
+          "description": "Recommends comparing results against a known baseline (previous version)"
+        },
+        {
+          "name": "provides_go_no_go_criteria",
+          "description": "Defines clear pass/fail criteria so the team knows whether to proceed with deployment"
+        },
+        {
+          "name": "no_tool_specific_syntax",
+          "description": "No load testing tool DSL, class names, or code snippets in the strategy"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "no-sla-defined",
+      "prompt": "I want to load test our internal admin dashboard. It has about 20 simultaneous users during business hours. There are no formal SLAs — the team just wants it to 'feel fast'. How do I set performance targets and what tests should I run?",
+      "expected_output": "Guidance on how to derive SLAs from smoke test baseline (2× smoke p95 as initial threshold). Industry benchmarks for interactive web apps (p95 < 500ms for fast, p95 < 1s for acceptable). Smoke → Load test recommendation sized at 20 users. Practical framing that translates 'feel fast' into concrete millisecond thresholds.",
+      "assertions": [
+        {
+          "name": "provides_sla_derivation_method",
+          "description": "Explains how to set SLAs without historical data (e.g., use smoke test baseline × 2)"
+        },
+        {
+          "name": "translates_fast_to_numbers",
+          "description": "Converts the vague 'feel fast' requirement into specific millisecond thresholds"
+        },
+        {
+          "name": "sizes_for_20_users",
+          "description": "Load test is sized at 20 concurrent users (stated user count)"
+        },
+        {
+          "name": "recommends_smoke_then_load",
+          "description": "Recommends Smoke → Load as the appropriate strategy for this low-risk, internal system"
+        },
+        {
+          "name": "no_tool_specific_syntax",
+          "description": "No load testing tool DSL, class names, or code snippets in the strategy"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "full-production-readiness",
+      "prompt": "We're launching a SaaS platform in 3 months. It's a multi-tenant web app with REST APIs, a PostgreSQL database, and Redis cache. We expect 500 users at launch growing to 2000 in year 1. What's the full performance testing strategy we need before going live?",
+      "expected_output": "Complete 5-test strategy (Smoke → Load → Stress → Spike → Endurance) with rationale for each. Load test at 500 users (launch) AND 2000 users (year 1 projection). Stress test to find capacity ceiling. Spike for burst scenarios. Endurance for SaaS reliability. Full metrics plan including DB connection pool and cache. Prerequisites: per-tenant test data, environment parity.",
+      "assertions": [
+        {
+          "name": "all_five_test_types",
+          "description": "All five test types are recommended: Smoke, Load, Stress, Spike, and Endurance"
+        },
+        {
+          "name": "load_at_launch_and_year1",
+          "description": "Load test addresses both 500 users (launch) and 2000 users (year 1 growth)"
+        },
+        {
+          "name": "stress_for_capacity_planning",
+          "description": "Stress test is justified for capacity planning and future growth headroom"
+        },
+        {
+          "name": "endurance_for_saas_reliability",
+          "description": "Endurance test is recommended for SaaS long-running reliability"
+        },
+        {
+          "name": "includes_db_and_cache_metrics",
+          "description": "Monitoring plan includes database and cache metrics"
+        },
+        {
+          "name": "mentions_multi_tenant_isolation",
+          "description": "Addresses multi-tenant concerns: test data isolation or tenant-specific load"
+        },
+        {
+          "name": "no_tool_specific_syntax",
+          "description": "No load testing tool DSL, class names, or code snippets in the strategy"
+        }
+      ]
+    }
+  ]
+}

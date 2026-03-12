@@ -107,6 +107,7 @@ The CLI discovers skills automatically from the `skills/<name>/SKILL.md` path co
 | Skill | File | Description |
 |---|---|---|
 | `gatling-best-practices` | `skills/gatling-best-practices/SKILL.md` | Guides building production-ready Gatling load test scenarios (Java, Kotlin, Scala, JS, TS) |
+| `performance-testing-strategy` | `skills/performance-testing-strategy/SKILL.md` | Guides QA engineers in designing a complete performance testing strategy (Smoke, Load, Stress, Spike, Endurance) |
 
 ## References
 
