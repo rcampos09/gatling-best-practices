@@ -84,10 +84,10 @@ After any change to a skill, install and run a prompt in a clean directory:
 
 ```bash
 # 1. Create a clean test directory
-mkdir ~/gatling-test && cd ~/gatling-test
+mkdir ~/skills-test && cd ~/skills-test
 
 # 2. Install the updated skill
-npx skills add rcampos09/performance-testing-skills --yes
+npx skills add rcampos09/performance-testing-skills --skill <skill-name> --yes
 
 # 3. Open Claude Code and run a test prompt
 # 4. Analyze the output — look for missing patterns, wrong syntax, or incomplete scripts
@@ -109,10 +109,10 @@ npx skills add anthropics/skills --skill skill-creator --yes
 **Running a benchmark** (open Claude Code in `~/skill-creator-workspace`):
 
 ```
-Test my skill k6-best-practices located at
-/path/to/skills/k6-best-practices/
+Test my skill <skill-name> located at
+/path/to/skills/<skill-name>/
 Use the evals in evals/evals.json.
-Create a workspace at ~/skill-creator-workspace/k6-iteration-1
+Create a workspace at ~/skill-creator-workspace/<skill-name>-iteration-1
 ```
 
 **What the benchmark produces:**
