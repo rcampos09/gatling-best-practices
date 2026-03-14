@@ -149,6 +149,8 @@ npx skills add rcampos09/performance-testing-skills
 
 # Install a specific skill by name within the repo
 npx skills add rcampos09/performance-testing-skills --skill gatling-best-practices
+npx skills add rcampos09/performance-testing-skills --skill performance-testing-strategy
+npx skills add rcampos09/performance-testing-skills --skill k6-best-practices
 
 # Opt out of anonymous telemetry
 DISABLE_TELEMETRY=1 npx skills add rcampos09/performance-testing-skills
