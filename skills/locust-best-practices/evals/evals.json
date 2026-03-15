@@ -136,6 +136,62 @@
           "description": "Solution handles the case where number of VUs exceeds CSV rows (e.g., using modulo: users[self.user_id % len(users)])"
         }
       ]
+    },
+    {
+      "id": 6,
+      "name": "multiple-user-classes-with-weights",
+      "prompt": "Our e-commerce platform has three types of users: anonymous browsers (60% of traffic), authenticated shoppers who view their wishlist (30%), and power buyers who checkout frequently (10%). How do I model all three in a single Locust test with 200 total users?",
+      "expected_output": "Locustfile with three HttpUser subclasses, each with a weight attribute (6, 3, 1), appropriate wait_time, and tasks matching each persona. Explains that Locust distributes users by weight automatically — no need to calculate user counts manually. Run command with -u 200.",
+      "assertions": [
+        {
+          "name": "three_user_classes",
+          "description": "Locustfile defines three distinct HttpUser subclasses for the three personas"
+        },
+        {
+          "name": "uses_weight_attribute",
+          "description": "Each class has a weight attribute (6, 3, 1 or proportional equivalent) — not hardcoded user counts"
+        },
+        {
+          "name": "tasks_match_personas",
+          "description": "Each user class has tasks that reflect its persona: browser GETs product pages, shopper GETs wishlist, buyer POSTs checkout"
+        },
+        {
+          "name": "explains_weight_distribution",
+          "description": "Explains that Locust distributes the 200 total users proportionally by weight — no manual math needed"
+        },
+        {
+          "name": "run_command_with_200_users",
+          "description": "Run command includes -u 200 and --headless"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "websocket-load-test",
+      "prompt": "I need to load test a WebSocket chat API. Each user connects to wss://chat.example.com/ws, sends a JSON message every 2 seconds, and expects an echo response. I need 50 concurrent connections for 5 minutes. How do I do this in Locust?",
+      "expected_output": "Complete locustfile with a custom WebSocketClient wrapper that fires environment.events.request after each send/receive cycle to report metrics to Locust. A WsUser base class (abstract=True) with on_start creating the client and on_stop closing it. A ChatUser subclass with a task that sends and receives. Run command for 50 users.",
+      "assertions": [
+        {
+          "name": "uses_custom_client_wrapper",
+          "description": "Solution wraps websocket-client (or similar) in a class that fires environment.events.request to report metrics — not raw websocket without instrumentation"
+        },
+        {
+          "name": "fires_request_event",
+          "description": "Custom client calls environment.events.request.fire() with request_type, name, response_time, response_length, and exception"
+        },
+        {
+          "name": "abstract_base_user",
+          "description": "Base WebSocket user class has abstract=True to prevent direct spawning"
+        },
+        {
+          "name": "closes_connection_in_on_stop",
+          "description": "on_stop() closes the WebSocket connection to avoid resource leaks"
+        },
+        {
+          "name": "run_command_50_users",
+          "description": "Run command includes -u 50 -t 5m and --headless"
+        }
+      ]
     }
   ]
 }

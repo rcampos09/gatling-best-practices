@@ -43,6 +43,10 @@ Ask only what is unknown:
 
 **Only load [references/SHAPES.md](references/SHAPES.md) when the user asks about custom load profiles, multi-stage ramps, spike simulation, or `LoadTestShape`.**
 
+**Only load [references/PROTOCOLS.md](references/PROTOCOLS.md) when the user mentions WebSocket, gRPC, or testing non-HTTP protocols.** Contains custom client wrappers, `events.request.fire()` pattern, and protocol compatibility notes.
+
+**Only load [references/DESIGN-PATTERNS.md](references/DESIGN-PATTERNS.md) when the user asks about project structure, multiple user classes, TaskSet, shared auth helpers, CSV data loading at scale, modular locustfiles, or multi-file organization.**
+
 ---
 
 ## Step 2 — Apply the 4-Block Pattern
