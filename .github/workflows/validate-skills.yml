@@ -12,6 +12,9 @@ on:
       - "skills/**"
       - ".github/workflows/validate-skills.yml"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   validate:
     name: Structural Validation
