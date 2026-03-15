@@ -8,6 +8,35 @@ Format: `[version] — date | benchmark results | key findings | what was fixed`
 
 ---
 
+## locust-best-practices
+
+### [1.1] — 2026-03-15 (iteration 1 — fixes applied)
+
+**Benchmark (iteration 1):**
+
+| Config | Pass Rate | Time | Tokens |
+|---|---|---|---|
+| with_skill | 95.1% | 77.8s | 19,383 |
+| without_skill | 91.4% | 70.0s | 12,193 |
+| Delta | **+3.7pp** | +7.8s | +7,190 |
+
+**Key findings:**
+- Eval 7 (WebSocket) is the biggest win: with_skill 100% vs. without_skill 60%. Skill correctly enforces `abstract=True` on the base WebSocket user class — baseline missed this entirely.
+- Eval 5 (CSV parameterization) showed a regression: with_skill 75% vs. without_skill 100%. Skill-guided agent stored `self.username` but forgot `self.password`. Guidance was not explicit enough.
+- Evals 2, 3, 4, 6, 8 tie at 100% — `catch_response`, `LoadTestShape`, `name=`, `weight`, and `quitting` event are well-known enough that baseline handles them without the skill.
+- Eval 1 assertion was too strict: penalized a correct `LoadTestShape` response that properly omits `-u`/`-r` flags.
+
+**Fixes applied:**
+
+| Issue | Fix |
+|---|---|
+| Eval 5 regression — only `self.username` stored | Added explicit instruction: store **all** CSV fields as instance attributes (`self.username` AND `self.password`) |
+| Eval 1 assertion too strict | Reworded to accept LoadTestShape responses without `-u`/`-r` |
+
+### [1.0] — 2026-03-15 (initial release)
+
+---
+
 ## k6-best-practices
 
 ### [1.4] — 2026-03-15 (iteration 2 — structural improvement confirmed)

@@ -11,7 +11,7 @@ compatibility: "Claude Code, Cursor, Windsurf. Requires Python 3.8+ and locust i
 model: sonnet
 metadata:
   author: rcampos
-  version: "1.0"
+  version: "1.1"
   tags: [locust, load-testing, performance, python]
 ---
 
@@ -242,6 +242,16 @@ Every unique URL path creates a new row in the stats table. Parameterized paths 
 
 ### 3. Shared mutable state between users
 Locust users run in greenlets (gevent), not threads, but shared state still causes race conditions in logic. Always store per-user state (`self.token`, `self.cart_id`) as instance attributes.
+
+When loading credentials from CSV, store **all fields** as instance attributes in `on_start` — not just one:
+```python
+# Wrong — only stores username, password is lost
+self.username = row["username"]
+
+# Correct — store every field the user will need
+self.username = row["username"]
+self.password = row["password"]
+```
 
 ### 4. `wait_time = constant(0)` or no `wait_time`
 Omitting think time generates unrealistic load and will saturate your test machine before the target system. Always define a meaningful `wait_time`.

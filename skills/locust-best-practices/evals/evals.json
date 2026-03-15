@@ -33,7 +33,7 @@
         },
         {
           "name": "includes_run_command",
-          "description": "Response includes the locust CLI command with --headless -u 100 -r 5 -t 10m --host flags"
+          "description": "Response includes a locust CLI command with --headless and --host. If LoadTestShape is used, -u and -r are correctly omitted. If no shape is used, -u 100 -r 5 are included."
         }
       ]
     },
