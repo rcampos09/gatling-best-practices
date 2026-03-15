@@ -47,6 +47,8 @@ Ask only what is unknown:
 
 **Only load [references/DESIGN-PATTERNS.md](references/DESIGN-PATTERNS.md) when the user asks about project structure, multiple user classes, TaskSet, shared auth helpers, CSV data loading at scale, modular locustfiles, or multi-file organization.**
 
+**Only load [references/RUNNING.md](references/RUNNING.md) when the user asks about headless mode, CI/CD integration, exit codes, SLA-based build failures, distributed testing, master/worker setup, multiple cores, logging to file, or custom log levels.**
+
 ---
 
 ## Step 2 — Apply the 4-Block Pattern

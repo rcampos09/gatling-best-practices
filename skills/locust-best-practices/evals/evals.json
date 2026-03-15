@@ -192,6 +192,34 @@
           "description": "Run command includes -u 50 -t 5m and --headless"
         }
       ]
+    },
+    {
+      "id": 8,
+      "name": "ci-cd-exit-code-on-sla-breach",
+      "prompt": "I'm running Locust in our CI/CD pipeline with --headless but the build always passes even when p95 response time is above our 800ms SLA and error rate is above 1%. How do I make the Locust process exit with a non-zero code when SLAs are breached so the pipeline fails automatically?",
+      "expected_output": "Explains that Locust exits 0 by default regardless of stats. Fix uses the quitting event hook to check stats.total metrics and set environment.process_exit_code = 1 when SLAs are breached. Shows complete implementation checking fail_ratio > 0.01 and get_response_time_percentile(0.95) > 800.",
+      "assertions": [
+        {
+          "name": "identifies_root_cause",
+          "description": "Explains that Locust always exits with code 0 by default — it does not fail automatically on SLA breaches"
+        },
+        {
+          "name": "uses_quitting_event",
+          "description": "Fix uses @events.quitting.add_listener to hook into the shutdown lifecycle"
+        },
+        {
+          "name": "sets_process_exit_code",
+          "description": "Handler sets environment.process_exit_code = 1 when a threshold is breached"
+        },
+        {
+          "name": "checks_fail_ratio",
+          "description": "Checks stats.total.fail_ratio against the 1% threshold"
+        },
+        {
+          "name": "checks_p95",
+          "description": "Checks stats.total.get_response_time_percentile(0.95) against the 800ms threshold"
+        }
+      ]
     }
   ]
 }
