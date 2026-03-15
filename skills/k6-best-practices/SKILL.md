@@ -12,7 +12,7 @@ compatibility: "Claude Code, Cursor, Windsurf. Requires k6 installed (brew insta
 model: sonnet
 metadata:
   author: rcampos
-  version: "1.3"
+  version: "1.4"
   tags: [k6, load-testing, performance, javascript, typescript]
 ---
 
@@ -28,6 +28,12 @@ When producing or fixing a script, always deliver three things:
 1. **A complete, runnable script file** — never a partial snippet.
 2. **The exact run command** with the environment variables needed.
 3. **A one-line explanation** of the executor chosen and why it fits the load goal.
+
+**When fixing any OOM error or `open()` misuse, also cover both distinct failure modes in your response — even if the user only mentioned one:**
+- Plain variable at init context (e.g. `const users = JSON.parse(open(...))`) → **OOM**: data is copied once per VU, so memory scales with VU count. Fix: `SharedArray`.
+- `open()` inside `default()` → **immediate runtime error** (`can't call open() in the VU context`) — this is NOT OOM, it crashes on the very first call. Fix: move `open()` to init context.
+
+Explaining both prevents the user from hitting the second error immediately after fixing the first.
 
 ---
 
