@@ -169,6 +169,39 @@ Added test type tags to metadata.
 
 ---
 
+## performance-report-analysis
+
+### [1.0] — 2026-03-15 (initial release)
+
+**Scope:** Post-test analysis skill — clearly differentiated from `performance-testing-strategy` (pre-test planning).
+
+**What this skill covers:**
+- Interpreting load test results from any tool (k6, Gatling, Locust, JMeter, Artillery)
+- Classifying findings by severity (Critical / High / Medium / Low / Informational)
+- Identifying bottleneck patterns (CPU, memory leak, DB, thread pool, network, third-party)
+- Producing a **technical report** for engineers and QA
+- Producing a **business report** for stakeholders — metric translation to user impact language
+- Detecting regressions against a baseline
+
+**Scope boundary explicitly stated in skill:**
+> "This skill covers analysis and communication of results *after* a test has run. For planning which tests to run, sizing VUs, or setting SLAs, use `performance-testing-strategy` instead."
+
+**Reference files:**
+- `references/BOTTLENECK-PATTERNS.md` — 7 bottleneck patterns with signatures, confirmation steps, remediation options
+- `references/REPORT-TEMPLATES.md` — 3 report templates: technical, business stakeholder, regression gate
+
+**Evals:** 8 evals covering:
+1. Load test result interpretation (SLA breach + root cause hypothesis)
+2. Technical report generation
+3. Business report generation (no jargon, stakeholder language)
+4. Error rate pattern — bug vs. capacity signal distinction
+5. Stress test analysis + breaking point + recovery verification
+6. Endurance memory leak identification
+7. Regression detection and release gate recommendation
+8. Mean vs. percentile education (communicating p99 to non-technical stakeholders)
+
+---
+
 ## Benchmark Baseline (as of 2026-03-14)
 
 _Final baseline after all skill-creator iterations (2026-03-15)._
@@ -179,5 +212,6 @@ _Final baseline after all skill-creator iterations (2026-03-15)._
 | `gatling-best-practices` | v1.1 | 1 | 95.8% ± 8% | 59.8% ± 31% | +36pp |
 | `performance-testing-strategy` | v1.3 | 2 | **100%** | 73.4% | +26.6pp |
 | `locust-best-practices` | v1.2 | 2 | **100%** | 91.4% | +8.6pp |
+| `performance-report-analysis` | v1.0 | — | not yet benchmarked | — | — |
 
 > ⚠️ **Statistical note:** Pass rate deltas under ~20pp require N ≥ 3 runs per eval to be reliable. Results with high variance (±10%+) should be interpreted with caution.

@@ -24,6 +24,7 @@ Compatible with **Claude Code**, **Cursor**, and **Windsurf**.
 | [`performance-testing-strategy`](skills/performance-testing-strategy/SKILL.md) | performance test plan, test strategy, Smoke test, Load test, Stress test, Spike test, Endurance test, Soak test, SLA definition, how many users, where to start with performance testing | Tool-agnostic |
 | [`k6-best-practices`](skills/k6-best-practices/SKILL.md) | k6, Grafana k6, load testing JavaScript, virtual users, VUs, scenarios, executors, thresholds, checks, SharedArray, arrival rate, open model, closed model, ramp-up stages, WebSocket, gRPC | JavaScript · TypeScript |
 | [`locust-best-practices`](skills/locust-best-practices/SKILL.md) | Locust, locustfile, HttpUser, TaskSet, load testing Python, virtual users, spawn rate, wait_time, catch_response, LoadTestShape, ramp-up stages, spike test | Python |
+| [`performance-report-analysis`](skills/performance-report-analysis/SKILL.md) | analyze test results, interpret load test output, p95 high, error rate under load, write performance report, explain results to manager, technical report, business report, stakeholder summary, bottleneck analysis | Tool-agnostic |
 
 ## How it works
 

@@ -1,0 +1,221 @@
+{
+  "skill_name": "performance-report-analysis",
+  "evals": [
+    {
+      "id": 1,
+      "name": "interpret-load-test-results",
+      "prompt": "We ran a 60-minute load test with 200 concurrent users against our e-commerce API. Here are the results:\n- p50: 180ms, p95: 1,240ms, p99: 3,800ms\n- Error rate: 0.8%\n- Throughput: 95 RPS\n- SLA: p95 < 800ms, error rate < 1%\n\nCPU stayed below 40%, memory was stable. The error rate was 0.8% throughout — no spikes.\n\nWhat do these results mean?",
+      "expected_output": "Analysis identifies: (1) p95 SLA breach (1,240ms vs 800ms target) as a high/critical finding, (2) error rate is below SLA but constant-not-zero which is suspect, (3) the wide spread between p50=180ms and p95=1,240ms indicates a long-tail problem not a general slowness, (4) low CPU/stable memory rules out those root causes, (5) hypothesizes DB, external dependency, or lock contention as likely cause of tail latency. Severity classification included.",
+      "assertions": [
+        {
+          "name": "identifies_sla_breach",
+          "description": "Correctly identifies that p95=1,240ms exceeds the 800ms SLA and classifies it as a failure"
+        },
+        {
+          "name": "analyzes_latency_spread",
+          "description": "Notes the wide spread between p50 (180ms) and p95 (1,240ms) and explains this indicates outliers/long-tail, not general slowness"
+        },
+        {
+          "name": "uses_infrastructure_context",
+          "description": "Uses the low CPU and stable memory data to rule out CPU saturation or memory leak as root causes"
+        },
+        {
+          "name": "assigns_severity",
+          "description": "Assigns a severity level (critical/high/medium/low) to the p95 SLA breach finding"
+        },
+        {
+          "name": "proposes_root_cause_hypothesis",
+          "description": "Proposes at least one specific root cause hypothesis (DB, external dependency, lock contention, or similar) not ruled out by the available data"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "write-technical-report",
+      "prompt": "Based on these load test results, write a technical report:\n- Test: Load test, 200 users, 60 minutes, Gatling\n- p50: 180ms, p95: 1,240ms, p99: 3,800ms (SLA: p95 < 800ms)\n- Error rate: 0.8% (SLA: < 1%)\n- Throughput: 95 RPS\n- DB slow query log showed 3 queries consistently taking 900ms+ at peak\n- CPU: 38%, Memory: stable\n- Baseline (last sprint): p95 = 720ms, error rate 0.3%",
+      "expected_output": "Structured technical report with: SLA compliance table showing p95 FAIL, baseline regression table showing p95 regression, findings section with at least one HIGH/CRITICAL finding about DB slow queries with specific numbers, infrastructure observations noting healthy CPU/memory, and recommendations table with prioritized actions. Report uses specific numbers from the prompt.",
+      "assertions": [
+        {
+          "name": "has_sla_compliance_table",
+          "description": "Report includes a table or section comparing actual vs target for p95 and error rate, with PASS/FAIL status"
+        },
+        {
+          "name": "has_regression_comparison",
+          "description": "Report compares current p95 (1,240ms) to baseline p95 (720ms) and calls out the regression (+72%)"
+        },
+        {
+          "name": "finding_references_db_queries",
+          "description": "At least one finding references the DB slow queries (900ms+) as the likely root cause for the p95 SLA breach"
+        },
+        {
+          "name": "finding_has_severity",
+          "description": "Each finding has an explicit severity label (CRITICAL, HIGH, MEDIUM, LOW, or INFO)"
+        },
+        {
+          "name": "has_recommendations",
+          "description": "Report includes a prioritized recommendations section with at least one concrete action (index optimization, query tuning, or similar)"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "write-business-report",
+      "prompt": "Write a business report for our VP of Product based on these load test results before next week's launch:\n- 200 users tested, expected 180 at peak\n- p95: 1,240ms (SLA: 800ms) — FAIL\n- Error rate: 0.8% — PASS\n- Root cause found: 3 DB queries missing indexes — fix takes 1 day\n- CPU, memory all healthy",
+      "expected_output": "Business report that: (1) uses plain language with no raw percentile numbers or tool names, (2) translates p95 SLA breach into user impact language (e.g. '1 in 20 users waits longer than expected'), (3) gives a clear go/no-go recommendation, (4) states what needs to happen before launch in non-technical terms, (5) mentions the fix is available and low-effort.",
+      "assertions": [
+        {
+          "name": "no_raw_technical_numbers",
+          "description": "Report does not use raw percentile notation (p95, p99) or tool-specific terms in stakeholder-facing sections — translates metrics to user experience language"
+        },
+        {
+          "name": "translates_sla_breach_to_user_impact",
+          "description": "Describes the p95 SLA breach in terms of user experience (e.g., proportion of users affected, what they experience) not as a raw millisecond comparison"
+        },
+        {
+          "name": "gives_clear_verdict",
+          "description": "Report explicitly states a launch recommendation: ready / not ready / ready with conditions"
+        },
+        {
+          "name": "mentions_fix_availability",
+          "description": "Report notes that a fix has been identified and can be applied before launch (database index fix)"
+        },
+        {
+          "name": "no_jargon_in_business_sections",
+          "description": "Business-facing sections do not contain technical jargon (no tool names, database terms, or percentile notation)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "error-rate-interpretation",
+      "prompt": "Our load test showed:\n- At 50 users: error rate 0%\n- At 100 users: error rate 0%\n- At 150 users: error rate 0.2%\n- At 200 users: error rate 2.8%\n- At 250 users: error rate 8.4%\n\nIs this a bug or a capacity issue? What does the pattern mean?",
+      "expected_output": "Correctly identifies this as a capacity signal, not a bug — the error rate is zero at low load and grows with concurrency. Distinguishes this from a bug (which would show errors at all load levels). Identifies the breaking point between 150 and 200 users. Recommends investigating connection pool exhaustion, thread pool saturation, or DB connection limits as likely causes given the exponential growth pattern.",
+      "assertions": [
+        {
+          "name": "classifies_as_capacity_not_bug",
+          "description": "Correctly identifies the load-correlated error growth as a capacity/saturation signal, not a code bug (which would appear at all load levels)"
+        },
+        {
+          "name": "identifies_breaking_point",
+          "description": "Identifies that the system starts degrading between 100 and 150 users (or 150-200 users), where errors first appear"
+        },
+        {
+          "name": "explains_exponential_growth_significance",
+          "description": "Notes that the exponential growth of error rate (0.2% → 2.8% → 8.4%) indicates approaching a hard limit — not linear degradation"
+        },
+        {
+          "name": "proposes_specific_hypotheses",
+          "description": "Suggests specific capacity-related root causes to investigate (connection pool, thread pool, DB connections, or similar — not generic 'server overload')"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "stress-test-analysis",
+      "prompt": "We ran a stress test to find our breaking point:\n- 100 users: p95=320ms, 0% errors\n- 200 users: p95=480ms, 0% errors\n- 300 users: p95=890ms, 0.1% errors\n- 400 users: p95=2,400ms, 4.2% errors\n- 500 users: p95=8,100ms, 18% errors — system started returning 503s\n- After reducing to 100 users: p95=340ms, 0% errors — full recovery in 90 seconds\n\nWhat conclusions can we draw?",
+      "expected_output": "Identifies the breaking point between 300 and 400 users. Notes graceful degradation pattern (latency rises before errors appear) which is healthy behavior. Confirms system recovered — critical finding for stress tests. Gives the capacity number (~300 users or RPS equivalent) and notes the SLA compliance zone. Recommends operating below the identified breaking point with a safety margin.",
+      "assertions": [
+        {
+          "name": "identifies_breaking_point",
+          "description": "Identifies the breaking point between 300 and 400 users where errors spike and latency becomes unacceptable"
+        },
+        {
+          "name": "notes_graceful_degradation",
+          "description": "Observes the progressive latency increase before error spike — identifies this as a positive sign of graceful degradation rather than sudden collapse"
+        },
+        {
+          "name": "confirms_recovery",
+          "description": "Explicitly notes and rates the system's recovery (p95 returned to 340ms, 0% errors) as a positive and important stress test finding"
+        },
+        {
+          "name": "gives_safe_operating_capacity",
+          "description": "Provides a safe operating capacity recommendation (at or below 300 users, or with a safety margin below the breaking point)"
+        },
+        {
+          "name": "distinguishes_sla_zone",
+          "description": "Identifies the load range where SLA is met (≤ 300 users based on results) vs. where it is breached"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "endurance-memory-leak",
+      "prompt": "We ran a 4-hour endurance test at 150 users. Here are the observations at different time intervals:\n\n- 0:00 — p95: 420ms, memory: 2.1GB, error rate: 0%\n- 1:00 — p95: 430ms, memory: 2.8GB, error rate: 0%\n- 2:00 — p95: 510ms, memory: 3.6GB, error rate: 0%\n- 3:00 — p95: 780ms, memory: 4.4GB, error rate: 0.1%\n- 4:00 — p95: 1,650ms, memory: 5.3GB, error rate: 1.8%\n\nSLA: p95 < 500ms, error rate < 0.5%. The service was restarted after the test.\n\nWhat does this pattern tell us?",
+      "expected_output": "Correctly identifies memory leak pattern: monotonic memory growth over 4 hours, correlated with rising latency and eventually errors. Explains GC pressure increasing as heap fills. States this is an endurance-specific issue — would not be caught in a short load test. Classifies as CRITICAL (SLA breached, service would need restart in production). Recommends heap dump analysis, identifying unbounded caches or retained objects.",
+      "assertions": [
+        {
+          "name": "identifies_memory_leak_pattern",
+          "description": "Correctly identifies the monotonic memory growth (2.1GB → 5.3GB) as a memory leak signature"
+        },
+        {
+          "name": "correlates_memory_to_latency",
+          "description": "Connects the memory growth to the progressive latency degradation — explains GC pressure or heap exhaustion as the mechanism"
+        },
+        {
+          "name": "notes_endurance_specific",
+          "description": "States that this issue would not appear in a short load test — it only manifests over time, which is why endurance testing is necessary"
+        },
+        {
+          "name": "classifies_as_critical",
+          "description": "Classifies the finding as CRITICAL or HIGH severity given the SLA is breached and the service would require periodic restarts in production"
+        },
+        {
+          "name": "recommends_heap_analysis",
+          "description": "Recommends heap dump analysis, profiling retained objects, or investigating unbounded caches as the investigation next step"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "regression-detection",
+      "prompt": "We ran the same load test (200 users, 30 minutes) before and after a release. Here are the comparison results:\n\nBaseline (v2.3.0):\n- p50: 140ms, p95: 680ms, p99: 1,100ms\n- Error rate: 0.05%\n- Throughput: 110 RPS\n\nCurrent (v2.4.0):\n- p50: 145ms, p95: 980ms, p99: 2,400ms\n- Error rate: 0.05%\n- Throughput: 108 RPS\n\nSLA: p95 < 800ms. Is this a regression? Should we block the release?",
+      "expected_output": "Identifies: p95 regression of +44% (680ms → 980ms), p99 regression of +118% (1,100ms → 2,400ms), p50 essentially unchanged (+3.5%). Error rate and throughput unchanged. Concludes YES, regression detected — p95 SLA is now breached. The p50 vs p95 delta suggests a new tail-latency problem introduced in v2.4.0. Recommends blocking release pending investigation.",
+      "assertions": [
+        {
+          "name": "computes_regression_percentages",
+          "description": "Calculates the p95 delta (+44%) and p99 delta (+118%) explicitly, not just notes they increased"
+        },
+        {
+          "name": "flags_sla_breach",
+          "description": "Identifies that p95=980ms breaches the 800ms SLA and was not breaching in baseline (680ms)"
+        },
+        {
+          "name": "notes_p50_stable",
+          "description": "Observes that p50 is essentially unchanged — indicating a tail-latency problem introduced in v2.4.0, not a general slowdown"
+        },
+        {
+          "name": "recommends_block_release",
+          "description": "Recommends blocking or not deploying v2.4.0 given the SLA breach regression"
+        },
+        {
+          "name": "suggests_investigation_focus",
+          "description": "Points to what changed in v2.4.0 that could cause tail latency: new code paths, new dependencies, configuration changes"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "mean-vs-percentile-education",
+      "prompt": "My manager says our load test passed because the average response time was 280ms, well within our 500ms SLA. But I'm looking at the Locust report and p99 is 4,200ms. How do I explain to my manager that the test actually failed?",
+      "expected_output": "Explains the fundamental difference between mean and percentile with a concrete example of how a small number of slow requests can be hidden by a good mean. Translates p99=4,200ms to business impact (1 in 100 users waits 4.2 seconds). Provides language the user can use with their manager. Explains why percentile-based SLAs are standard in the industry for user experience measurement.",
+      "assertions": [
+        {
+          "name": "explains_mean_hides_outliers",
+          "description": "Explains that the mean can be pulled down by many fast requests while slow requests remain hidden — providing a concrete example of this phenomenon"
+        },
+        {
+          "name": "translates_p99_to_user_impact",
+          "description": "Translates p99=4,200ms into user-facing language: 1 in 100 users waits 4.2 seconds — over 8× the SLA"
+        },
+        {
+          "name": "gives_manager_communication_language",
+          "description": "Provides specific language or framing the user can use to explain the issue to their manager without technical jargon"
+        },
+        {
+          "name": "recommends_percentile_slas",
+          "description": "Explains why percentile-based SLAs (p95, p99) are used instead of averages for measuring user experience in production systems"
+        }
+      ]
+    }
+  ]
+}
