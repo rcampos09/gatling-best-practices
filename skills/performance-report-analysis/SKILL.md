@@ -16,7 +16,7 @@ compatibility: "Claude Code, Cursor, Windsurf. Tool-agnostic: works with output 
 model: sonnet
 metadata:
   author: rcampos
-  version: "1.0"
+  version: "1.1"
   tags: [performance-testing, load-testing, reporting, bottleneck-analysis, stakeholder-communication]
 ---
 
@@ -57,6 +57,10 @@ Ask only what you don't have yet. You need at minimum:
 If the user pastes raw output, extract the numbers yourself. If critical fields are
 missing, ask specifically for them — do not proceed with incomplete data.
 
+**Only load [references/TOOL-REPORT-FORMATS.md](references/TOOL-REPORT-FORMATS.md)
+when the user pastes raw output from k6, Gatling, Locust, JMeter, or Artillery and
+needs help reading or interpreting the specific fields, charts, or sections of that tool's report.**
+
 **Only load [references/BOTTLENECK-PATTERNS.md](references/BOTTLENECK-PATTERNS.md)
 when the user asks to diagnose *why* a metric is degraded — CPU spikes, memory growth,
 slow queries, connection pool exhaustion, or third-party dependency slowness.**
@@ -68,7 +72,15 @@ you are ready to produce the final technical or business report draft.**
 
 ## Step 2 — Analyze the Findings
 
-Work through these four lenses before classifying anything.
+### 2.0 Triage order — always start here
+
+When results arrive, evaluate in this order. Stop and report if you find a blocker at any step:
+
+1. **Error rate first** — if errors exist at baseline load, it is a bug, not a capacity issue. Capacity numbers are invalid until the bug is fixed.
+2. **Did the test reach its target load?** — if VU count or RPS never reached the configured peak, the results are partial. State this limitation explicitly.
+3. **Global p95 vs. SLA** — is the most important SLA met or breached at steady state?
+4. **Latency trend over time** — was performance stable throughout the test, or did it degrade mid-run? (memory leak, warm-up, resource exhaustion)
+5. **Per-endpoint breakdown** — which specific endpoint is the source of the problem? Never report only global metrics if per-endpoint data is available.
 
 ### 2.1 SLA compliance check
 
@@ -124,6 +136,46 @@ When a baseline exists, always compute delta:
 - p95 or p99 regression > 20% → flag as degradation
 - Error rate increase > 0.1 pp (from near-zero) → flag immediately
 - Throughput drop > 10% at same load → flag as capacity regression
+
+### 2.5 Per-endpoint analysis
+
+Global metrics hide which endpoint is causing the problem. When per-endpoint data is available:
+
+1. Sort endpoints by p95 descending — the top 3 are your investigation targets
+2. Check whether failing endpoints share a pattern (same DB table, same external dep, same service)
+3. Distinguish: is one slow endpoint dragging up the global p95, or is the problem widespread?
+4. Report SLA compliance per endpoint when SLAs are defined per endpoint, not just globally
+
+| Situation | What to report |
+|---|---|
+| 1 of 10 endpoints causes the SLA breach | Flag that endpoint specifically — global SLA breach is misleading without this context |
+| All endpoints degrade together | Shared resource bottleneck — investigate DB, network, or infra |
+| Only POST endpoints fail | Investigate write path: DB locks, validation, downstream writes |
+| Only authenticated endpoints fail | Investigate auth middleware, token validation, session store |
+
+### 2.6 Chart and graph interpretation
+
+When the user shares or references visual reports (Gatling HTML, k6 dashboard, Locust charts):
+
+| Chart type | What to look for | Red flags |
+|---|---|---|
+| Response time over time | Should be flat during steady state | Upward trend = leak or saturation; spikes = GC or retry storms |
+| Active users / VUs over time | Should match the configured ramp profile | Plateau below target = test runner bottleneck or too-strict rate limiter |
+| Requests per second | Should track with VU count | RPS plateaus while VUs increase = system saturated |
+| Error rate over time | Should be near zero | Spike then recover = transient; growing = capacity limit approaching |
+| Response time distribution | Should be right-skewed (few slow outliers) | Bimodal distribution = two distinct user populations or cache hit/miss split |
+
+### 2.7 Spike test and warm-up analysis
+
+**Spike tests — three things to verify:**
+1. Did the system reach the configured spike peak? (check VU/RPS chart)
+2. What was the error rate and p95 *at peak*? (the stress moment)
+3. How long did recovery take after load dropped? (recovery time = time to return to baseline p95 ± 10%)
+
+**Warm-up / cold start — when to exclude from SLA evaluation:**
+- If latency is high in the first 2–5 minutes then stabilizes → exclude warm-up window from SLA measurement
+- Evaluate SLA only during steady-state (after the ramp-up phase completes)
+- Note the warm-up duration in the report — it matters for autoscaling and readiness probe configuration
 
 ---
 
@@ -322,3 +374,13 @@ regressed. Always capture and store first-run results as the baseline for future
 Finding the breaking point is only half the stress test. Confirm the system *recovers*
 after load is removed. A system that crashes and stays crashed is far more dangerous
 than one that degrades gracefully.
+
+### 8. Analyzing warm-up period as steady state
+High p95 values in the first 2–5 minutes of a test are often JIT compilation, lazy
+connection initialization, or DNS resolution — not application performance. Always
+exclude the ramp-up/warm-up window when evaluating SLA compliance.
+
+### 9. Reporting only global metrics when per-endpoint data is available
+A global p95 of 900ms could mean all 10 endpoints are slow (infrastructure problem)
+or one endpoint is returning 9,000ms (specific bug). Always break down to endpoint
+level before drawing conclusions or making recommendations.

@@ -168,20 +168,84 @@ Match the observed symptom pattern to a bottleneck type. Each pattern includes:
 
 **Signatures:**
 - First requests in a test have significantly higher latency than steady-state
-- JVM or runtime language with JIT compilation shows this most prominently
-- After 2–5 minutes, latency stabilizes at a lower level
-- Results from short tests include warm-up in the percentiles, inflating numbers
+- After 2–5 minutes, latency drops and stabilizes — the "hockey stick" shape on the response time over time chart
+- JVM (Java, Kotlin, Scala) and Python show this most prominently; Go and Rust rarely show it
+- Short tests (< 5 minutes) have inflated percentiles because warm-up is included in the aggregate
+
+**What causes it (by layer):**
+| Layer | Cause |
+|---|---|
+| JVM / Node.js | JIT compilation — first execution of code paths is interpreted, then compiled |
+| Connection pools | First requests open new TCP/DB connections; subsequent reuse them |
+| DNS | First request resolves hostname; subsequent use cached result |
+| Caches (Redis, Memcached) | First requests are cache misses; subsequent are hits |
+| CDN / Proxy | First request goes to origin; subsequent served from edge cache |
 
 **Confirmation:**
-- Plot latency over time — downward trend at the start, then plateau
-- Compare p95 during first 2 minutes vs. steady state
-- Identify if infrastructure uses lazy initialization (connection pools, JIT, DNS caches)
+- Plot latency over time — clear downward trend at the start, then plateau at steady state
+- Compare p95 during first 2 minutes vs. minutes 5–10 of steady state
+- If p95 is 3–5× higher at start than at steady state, warm-up is the primary factor
 
 **Remediation:**
-1. Exclude warm-up period from SLA evaluation — use a ramp-up phase and only evaluate steady state
-2. Add warm-up steps to the load test (low traffic for 2–5 minutes before ramping to peak)
-3. Pre-warm instances before deploying behind a load balancer (readiness probe)
-4. Use AOT compilation or pre-warming scripts in the deployment process
+1. Exclude warm-up window from SLA evaluation — report p95 at steady state only
+2. Add a low-load warm-up phase (10–20% of peak traffic for 2–5 minutes) before ramping
+3. Configure readiness probes on load balancers to send traffic only after instances are warm
+4. Use AOT compilation (GraalVM native, Go build) to eliminate JIT warm-up for latency-critical services
+
+---
+
+## Pattern 8 — Event Loop / Async Saturation
+
+Applies to: Node.js, Python asyncio, Vert.x, Netty, and other event-loop or reactive systems.
+
+**Signatures:**
+- Latency spikes sharply above a concurrency threshold despite low CPU utilization
+- p99 >> p95 — a small percentage of requests wait much longer (stuck behind others in the event loop queue)
+- Throughput does not increase beyond a fixed ceiling even with more VUs
+- No thread pool exhaustion (this is an async system — threads are not the bottleneck)
+- CPU is at 40–60% — the system looks "fine" on CPU but is still slow
+
+**Why it happens:**
+Event loops process one task at a time. If a task blocks the loop (synchronous I/O, CPU-heavy computation, a large JSON parse), all other requests queue behind it. Unlike thread-based systems, you cannot add more threads — you need to eliminate the blocking operation.
+
+**Confirmation:**
+- Enable async profiler / flame graph: identify synchronous operations inside async handlers
+- Look for blocking calls: `fs.readFileSync`, `JSON.parse` on large payloads, `crypto.pbkdf2Sync`, ORM queries that block
+- Check Node.js event loop lag metric (if instrumented) — lag > 100ms = event loop is backed up
+- In Python asyncio: look for `time.sleep()` instead of `await asyncio.sleep()`, blocking DB drivers instead of async ones
+
+**Remediation:**
+1. Move CPU-intensive work to a worker thread or process pool (Node.js `worker_threads`, Python `ProcessPoolExecutor`)
+2. Replace blocking I/O calls with async equivalents (e.g., `await fs.promises.readFile` instead of `fs.readFileSync`)
+3. Use async-native DB drivers (e.g., `asyncpg` for PostgreSQL in Python, not `psycopg2`)
+4. Break large synchronous operations into smaller chunks with `await setImmediate()` or `await asyncio.sleep(0)` yield points
+5. Scale horizontally — add more processes (each gets its own event loop); this does not fix the blocking code but reduces queueing per process
+
+---
+
+## Pattern 9 — Cache Invalidation Storm
+
+**Signatures:**
+- Latency and error rate spike suddenly after a period of stable performance
+- Spike correlates with a cache TTL expiry, a deployment, or a cache flush event
+- Many concurrent requests hit the same backend resource simultaneously
+- After the spike, latency returns to normal (cache is repopulated)
+- DB CPU spikes sharply at the same moment the application latency spikes
+
+**Why it happens (Thundering Herd / Cache Stampede):**
+When a cache entry expires, multiple concurrent requests simultaneously find a cache miss and all go to the database at the same time. Instead of one DB query per request sequentially, the database gets N identical queries at once — causing a spike in DB load and latency.
+
+**Confirmation:**
+- Correlate latency spike timestamp with cache TTL — did the spike happen at a round TTL interval (e.g., every 60 seconds)?
+- Check DB slow query log at the spike moment — look for repeated identical queries
+- Check cache hit ratio metrics — a sudden drop in hit ratio indicates the invalidation event
+
+**Remediation:**
+1. **Cache locking / mutex on miss** — when a cache miss occurs, acquire a lock, fetch from DB once, repopulate cache, release lock. Other requests wait for the lock rather than hitting the DB
+2. **Probabilistic early expiration** — start refreshing the cache before TTL expires, based on a random threshold (avoids synchronized expiry)
+3. **Stale-while-revalidate** — serve the stale cached value while refreshing in the background; users get old data briefly but DB is not hammered
+4. **Jitter on TTL** — add random offset to cache TTL so all keys don't expire at the same second (e.g., TTL = 60s ± 10s)
+5. **Background refresh** — proactively refresh high-traffic cache keys before they expire
 
 ---
 

@@ -217,5 +217,138 @@
         }
       ]
     }
+    ,
+    {
+      "id": 9,
+      "name": "k6-output-interpretation",
+      "prompt": "Here is the k6 output from our load test. Can you analyze it?\n\n```\nscenarios: (100.00%) 1 scenario, 100 max VUs, 5m30s maximum duration\ndefault: 100 looping VUs for 5m0s (gracefulStop: 30s)\n\n✓ status was 200\n✗ response body contains user\n  ↳  61% — ✓ 1830 / ✗ 1170\n\nchecks.........................: 80.50%  ✓ 3660  ✗ 1170\nhttp_req_blocked...............: avg=1.1ms  p(95)=8µs\nhttp_req_duration..............: avg=340ms  p(90)=780ms  p(95)=1240ms  p(99)=3100ms\nhttp_req_failed................: 0.00%   ✓ 0  ✗ 3000\nhttp_req_waiting...............: avg=338ms  p(95)=1238ms\nhttp_reqs......................: 3000    9.99/s\nvus............................: 100     min=100    max=100\n\nTHRESHOLDS\nhttp_req_duration.............: p(95)<1000 — FAIL\nhttp_req_failed...............: rate<0.01  — PASS\n```\n\nOur SLA is p95 < 1000ms and error rate < 1%. Did we pass?",
+      "expected_output": "Explains that: (1) http_req_failed=0% means no HTTP errors — the threshold passes, BUT (2) checks=80.5% means the 'response body contains user' assertion failed 39% of the time — this is a business logic failure invisible to http_req_failed, (3) p95=1,240ms breaches the 1000ms threshold — confirmed by THRESHOLDS FAIL, (4) overall the test FAILED on two dimensions: SLA breach and failing checks. Explains the difference between http_req_failed and checks.",
+      "assertions": [
+        {
+          "name": "identifies_threshold_fail",
+          "description": "Identifies that p(95)=1,240ms exceeds the 1000ms threshold and the THRESHOLDS section shows FAIL"
+        },
+        {
+          "name": "distinguishes_checks_from_http_errors",
+          "description": "Explains that http_req_failed=0% and checks=80.5% are different metrics — http_req_failed=0% means no HTTP errors, but failing checks means business logic assertions failed"
+        },
+        {
+          "name": "identifies_body_assertion_failure",
+          "description": "Notes that the 'response body contains user' check failed 39% of the time (1170/3000) — this is likely a functional bug, not a load issue"
+        },
+        {
+          "name": "correct_overall_verdict",
+          "description": "Concludes the test FAILED on at least two dimensions: p95 SLA breach and failing business-logic checks"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "gatling-report-interpretation",
+      "prompt": "I ran a Gatling load test and here are the stats from the HTML report's request breakdown table:\n\n| Request | Total | OK | KO | % KO | p50 | p95 | p99 |\n|---|---|---|---|---|---|---|---|\n| All Requests | 45,000 | 43,200 | 1,800 | 4.0% | 210ms | 1,850ms | 5,400ms |\n| GET /api/products | 22,500 | 22,490 | 10 | 0.04% | 180ms | 480ms | 920ms |\n| POST /api/orders | 9,000 | 7,650 | 1,350 | 15.0% | 280ms | 3,200ms | 7,100ms |\n| GET /api/cart | 13,500 | 13,060 | 440 | 3.3% | 190ms | 1,100ms | 3,800ms |\n\nSLA: p95 < 1000ms, error rate < 1%. What should I investigate?",
+      "expected_output": "Identifies that: (1) POST /api/orders is the critical problem — 15% error rate and p95=3,200ms — far exceeding SLA on both dimensions, (2) GET /api/cart also breaches p95 SLA (1,100ms vs 1,000ms target) and has 3.3% errors, (3) GET /api/products is healthy, (4) the global 4% error rate is almost entirely driven by /api/orders. Recommends investigating the order creation endpoint's write path — DB locks, validation, or downstream service calls.",
+      "assertions": [
+        {
+          "name": "identifies_orders_as_primary_problem",
+          "description": "Identifies POST /api/orders as the primary failing endpoint — 15% error rate and p95=3,200ms vs 1,000ms SLA"
+        },
+        {
+          "name": "identifies_cart_as_secondary",
+          "description": "Identifies GET /api/cart as a secondary issue — p95 exceeds SLA (1,100ms > 1,000ms) and has 3.3% errors"
+        },
+        {
+          "name": "notes_products_is_healthy",
+          "description": "Notes that GET /api/products is within SLA and healthy — the problem is not global"
+        },
+        {
+          "name": "explains_global_error_rate_composition",
+          "description": "Explains that the global 4% error rate is driven primarily by the /api/orders endpoint, not a systemic problem"
+        },
+        {
+          "name": "recommends_write_path_investigation",
+          "description": "Recommends investigating the order creation write path — DB locks, downstream service calls, or validation logic — not a generic 'check the server'"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "spike-test-recovery-analysis",
+      "prompt": "We ran a spike test to prepare for our Black Friday launch. Here is the timeline:\n\n- 0:00–2:00 — Baseline: 50 users, p95=320ms, 0% errors\n- 2:00–2:30 — Spike to 500 users (30 seconds)\n- 2:30–7:30 — Peak hold: 500 users, p95=2,800ms, error rate 6.2%, many 503s\n- 7:30–8:00 — Load drops back to 50 users\n- 8:00–9:00 — p95=890ms, 1.1% errors\n- 9:00–11:00 — p95=430ms, 0.2% errors\n- 11:00–13:00 — p95=335ms, 0% errors — back to baseline\n\nOur SLA: p95 < 500ms, error rate < 1%. Is the system ready for Black Friday?",
+      "expected_output": "Identifies: (1) system breached SLA severely at spike peak (p95=2,800ms, 6.2% errors — both fail), (2) recovery was slow — took 4.5 minutes to return to baseline after load dropped, (3) the 30-second ramp to 500 users was too fast — the system could not absorb it, (4) system IS NOT ready for Black Friday as-is. Recommends: finding the bottleneck at peak load, scaling capacity, and verifying with a second spike test after fixes. Also notes positive: system eventually recovered — not a hard crash.",
+      "assertions": [
+        {
+          "name": "identifies_peak_sla_breach",
+          "description": "Identifies that at peak (500 users), p95=2,800ms and error rate=6.2% both fail SLA targets"
+        },
+        {
+          "name": "measures_recovery_time",
+          "description": "Identifies that recovery took approximately 4.5 minutes (from 7:30 when load dropped to ~11:00 when baseline was restored) — this is slow"
+        },
+        {
+          "name": "notes_positive_recovery",
+          "description": "Notes that the system eventually recovered fully — this is a positive signal (graceful degradation and recovery, not a crash)"
+        },
+        {
+          "name": "gives_not_ready_verdict",
+          "description": "Concludes the system is NOT ready for Black Friday at the tested scale without addressing the capacity issues found at peak"
+        },
+        {
+          "name": "recommends_bottleneck_investigation",
+          "description": "Recommends investigating the bottleneck at 500 users (connection pool, thread pool, or DB) and retesting after fixes"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "per-endpoint-analysis",
+      "prompt": "Here are the per-endpoint results from our Locust test (200 users, 30 minutes). SLA: all endpoints p95 < 800ms, global error rate < 1%:\n\n| Endpoint | Requests | Failures | Failure% | p50 | p95 | p99 |\n|---|---|---|---|---|---|---|\n| GET /api/products | 18,400 | 12 | 0.07% | 145ms | 380ms | 710ms |\n| GET /api/product/:id | 9,200 | 8 | 0.09% | 160ms | 420ms | 850ms |\n| GET /api/cart | 9,200 | 6 | 0.07% | 170ms | 390ms | 720ms |\n| POST /api/cart/add | 6,100 | 4 | 0.07% | 190ms | 460ms | 810ms |\n| GET /api/orders | 4,600 | 3 | 0.07% | 180ms | 410ms | 780ms |\n| POST /api/checkout | 2,300 | 1,610 | 70.0% | 890ms | 8,400ms | 12,000ms |\n\nGlobal: 49,800 requests, 1,643 failures, 3.3% error rate",
+      "expected_output": "Identifies that POST /api/checkout is catastrophically failing (70% error rate, p95=8,400ms) and is the sole cause of the global 3.3% error rate. All other endpoints are healthy and within SLA. The problem is isolated to the checkout write path. Recommends investigating the checkout endpoint specifically — not a global infrastructure problem. Global error rate of 3.3% is entirely from checkout.",
+      "assertions": [
+        {
+          "name": "identifies_checkout_as_sole_problem",
+          "description": "Identifies POST /api/checkout as the only failing endpoint — 70% failure rate and p95=8,400ms — and all other endpoints are healthy"
+        },
+        {
+          "name": "explains_global_rate_is_misleading",
+          "description": "Explains that the global 3.3% error rate is almost entirely caused by /api/checkout — the other endpoints contribute < 0.1% errors collectively"
+        },
+        {
+          "name": "confirms_other_endpoints_healthy",
+          "description": "Confirms that the other 5 endpoints all pass SLA (p95 < 800ms, errors < 1%) — the problem is not systemic"
+        },
+        {
+          "name": "recommends_checkout_specific_investigation",
+          "description": "Recommends investigating the checkout endpoint specifically (write path, payment integration, inventory reservation, or DB transaction) — not a general infrastructure investigation"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "incomplete-data-handling",
+      "prompt": "We ran a load test with JMeter but the person who configured it only exported the Summary Report, not the Aggregate Report. All I have is:\n\n- Total requests: 24,000\n- Average response time: 410ms\n- Min: 89ms\n- Max: 18,400ms\n- Error rate: 2.3%\n- Throughput: 80 RPS\n\nOur SLA is p95 < 1000ms and error rate < 1%. Did we pass?",
+      "expected_output": "Explains that with only mean/min/max data, it is IMPOSSIBLE to determine p95 SLA compliance. The mean of 410ms could coexist with a p95 of 2,000ms+ given the max of 18,400ms. The error rate of 2.3% clearly fails the 1% SLA. Recommends re-running the test with proper percentile output (Aggregate Report, Dashboard Report, or --out json). States what CAN be concluded: error rate fails SLA, and the max of 18,400ms indicates severe outliers, but percentile SLA compliance is unknown.",
+      "assertions": [
+        {
+          "name": "identifies_data_is_insufficient_for_p95",
+          "description": "Clearly states that mean, min, and max are not sufficient to evaluate p95 SLA compliance — percentile data is required"
+        },
+        {
+          "name": "confirms_error_rate_fail",
+          "description": "Confirms that the 2.3% error rate clearly fails the 1% SLA — this can be determined from available data"
+        },
+        {
+          "name": "explains_mean_cannot_proxy_p95",
+          "description": "Explains why the 410ms mean does not tell us whether p95 is within 1000ms — given the 18,400ms max, the tail could be very long"
+        },
+        {
+          "name": "recommends_rerun_with_percentiles",
+          "description": "Recommends re-running the test with JMeter Aggregate Report, Dashboard Report generation, or JTL export to get proper percentile data"
+        },
+        {
+          "name": "states_what_can_be_concluded",
+          "description": "Clearly separates what IS known (error rate fails, max shows severe outliers) from what is UNKNOWN (p95 SLA compliance) — does not make up conclusions"
+        }
+      ]
+    }
   ]
 }

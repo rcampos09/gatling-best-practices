@@ -171,6 +171,26 @@ Added test type tags to metadata.
 
 ## performance-report-analysis
 
+### [1.1] — 2026-03-15 (deep improvement — pre-benchmark)
+
+**Changes vs. v1.0:**
+
+| Area | What was added |
+|---|---|
+| SKILL.md | **Triage order** (Step 2.0) — 5-step sequence: errors first → load reached? → global p95 → trend → per-endpoint |
+| SKILL.md | **Per-endpoint analysis** (Step 2.5) — how to find which endpoint is the source, not just global metrics |
+| SKILL.md | **Chart/graph interpretation** (Step 2.6) — how to read response time over time, RPS, VU count, distribution charts |
+| SKILL.md | **Spike test and warm-up analysis** (Step 2.7) — recovery time measurement, warm-up exclusion from SLA |
+| SKILL.md | 2 new Common Mistakes: warm-up period included in SLA evaluation, reporting only global metrics |
+| SKILL.md | Reference to new TOOL-REPORT-FORMATS.md |
+| New file | **TOOL-REPORT-FORMATS.md** — field-by-field guide for k6, Gatling, Locust, JMeter, Artillery output; cross-tool metric equivalence table |
+| BOTTLENECK-PATTERNS.md | **Pattern 8: Event loop / async saturation** (Node.js, Python asyncio, reactive systems) |
+| BOTTLENECK-PATTERNS.md | **Pattern 9: Cache invalidation storm / Thundering Herd** — TTL expiry, stampede pattern, remediation |
+| BOTTLENECK-PATTERNS.md | Enhanced Pattern 7 (Cold Start) — per-runtime breakdown of what causes warm-up, hockey-stick chart description |
+| evals.json | 5 new evals (total: 13): k6 checks vs http_req_failed distinction, Gatling per-endpoint analysis, spike test recovery, per-endpoint isolation, incomplete data handling |
+
+**Motivation:** QA engineers consistently ask: "What do I look at first?", "How do I read this Gatling/k6 report?", "Why does my global error rate look bad when only one endpoint is failing?". These additions address those exact questions.
+
 ### [1.0] — 2026-03-15 (initial release)
 
 **Scope:** Post-test analysis skill — clearly differentiated from `performance-testing-strategy` (pre-test planning).
@@ -212,6 +232,6 @@ _Final baseline after all skill-creator iterations (2026-03-15)._
 | `gatling-best-practices` | v1.1 | 1 | 95.8% ± 8% | 59.8% ± 31% | +36pp |
 | `performance-testing-strategy` | v1.3 | 2 | **100%** | 73.4% | +26.6pp |
 | `locust-best-practices` | v1.2 | 2 | **100%** | 91.4% | +8.6pp |
-| `performance-report-analysis` | v1.0 | — | not yet benchmarked | — | — |
+| `performance-report-analysis` | v1.1 | — | not yet benchmarked | — | — |
 
 > ⚠️ **Statistical note:** Pass rate deltas under ~20pp require N ≥ 3 runs per eval to be reliable. Results with high variance (±10%+) should be interpreted with caution.
